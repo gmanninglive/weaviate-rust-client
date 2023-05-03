@@ -1,3 +1,6 @@
+pub mod connection;
+mod utils;
+
 #[cfg(test)]
 mod tests {
     #[test]
