@@ -20,7 +20,7 @@ pub struct MetaResponse {
 }
 
 #[async_trait::async_trait]
-impl<'a> CommandTrait<MetaResponse> for MetaGetter {
+impl CommandTrait<MetaResponse> for MetaGetter {
     async fn r#do(&self) -> Result<MetaResponse, anyhow::Error> {
         let res: MetaResponse = self
             .client

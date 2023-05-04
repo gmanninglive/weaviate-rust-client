@@ -12,50 +12,6 @@ pub struct DbVersionSupport {
     db_version_provider: DbVersionProvider,
 }
 
-struct VersionWarnings {
-    version: String,
-}
-
-impl VersionWarnings {
-    fn deprecatedNonClassNameNamespacedEndpointsForObjects(self) {
-        log::warn!(
-        "Usage of objects paths without className is deprecated in Weaviate {}. Please provide className parameter"
-      , self.version);
-    }
-
-    fn deprecatedNonClassNameNamespacedEndpointsForReferences(self) {
-        log::warn!(
-        "Usage of references paths without className is deprecated in Weaviate {}. Please provide className parameter"
-     ,self.version);
-    }
-
-    fn deprecatedNonClassNameNamespacedEndpointsForBeacons(self) {
-        log::warn!(
-        "Usage of beacons paths without className is deprecated in Weaviate {}. Please provide className parameter"
-     , self.version );
-    }
-    fn notSupportedClassNamespacedEndpointsForObjects(self) {
-        log::warn!(
-        "Usage of objects paths with className is not supported in Weaviate {}. className parameter is ignored"
-     , self.version );
-    }
-    fn notSupportedClassNamespacedEndpointsForReferences(self) {
-        log::warn!(
-        "Usage of references paths with className is not supported in Weaviate {}. className parameter is ignored"
-     , self.version );
-    }
-    fn notSupportedClassNamespacedEndpointsForBeacons(self) {
-        log::warn!(
-        "Usage of beacons paths with className is not supported in Weaviate {}. className parameter is ignored"
-     , self.version );
-    }
-    fn notSupportedClassParameterInEndpointsForObjects(self) {
-        log::warn!(
-        "Usage of objects paths with class query parameter is not supported in Weaviate {}. class query parameter is ignored"
-     , self.version );
-    }
-}
-
 struct SupportReponse {
     version: String,
     supports: bool,
@@ -123,19 +79,63 @@ impl DbVersionProvider {
     }
 
     async fn refresh(self, force: bool) -> String {
-        return match self.version {
+        match self.version {
             Some(version) => {
                 if force {
                     let meta = self.version_getter.r#do().await;
-                    return match meta {
+                    match meta {
                         Ok(meta) => meta.version,
                         Err(_) => self.empty_version,
-                    };
+                    }
                 } else {
                     version
                 }
             }
             None => self.empty_version,
-        };
+        }
+    }
+}
+
+struct VersionWarnings {
+    version: String,
+}
+
+impl VersionWarnings {
+    fn deprecated_non_classname_namespaced_endpoints_for_objects(self) {
+        log::warn!(
+        "Usage of objects paths without className is deprecated in Weaviate {}. Please provide className parameter"
+      , self.version);
+    }
+
+    fn deprecated_non_classname_namespaced_endpoints_for_references(self) {
+        log::warn!(
+        "Usage of references paths without className is deprecated in Weaviate {}. Please provide className parameter"
+     ,self.version);
+    }
+
+    fn deprecated_non_classname_namespaced_endpoints_for_beacons(self) {
+        log::warn!(
+        "Usage of beacons paths without className is deprecated in Weaviate {}. Please provide className parameter"
+     , self.version );
+    }
+    fn not_supported_classname_namespaced_endpoints_for_objects(self) {
+        log::warn!(
+        "Usage of objects paths with className is not supported in Weaviate {}. className parameter is ignored"
+     , self.version );
+    }
+    fn not_supported_classname_namespaced_endpoints_for_references(self) {
+        log::warn!(
+        "Usage of references paths with className is not supported in Weaviate {}. className parameter is ignored"
+     , self.version );
+    }
+    fn not_supported_classname_namespaced_endpoints_for_beacons(self) {
+        log::warn!(
+        "Usage of beacons paths with className is not supported in Weaviate {}. className parameter is ignored"
+     , self.version );
+    }
+    fn not_supported_class_parameter_in_endpoints_for_objects(self) {
+        log::warn!(
+        "Usage of objects paths with class query parameter is not supported in Weaviate {}. class query parameter is ignored"
+     , self.version );
     }
 }

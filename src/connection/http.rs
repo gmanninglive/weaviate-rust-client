@@ -26,7 +26,7 @@ impl HttpClient {
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
         let headers = init_headers(
-            &self,
+            self,
             HeaderOptions {
                 bearer_token,
                 content_type: None,
@@ -50,7 +50,7 @@ impl HttpClient {
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
         let headers = init_headers(
-            &self,
+            self,
             HeaderOptions {
                 bearer_token,
                 content_type: Some("application/json".to_string()),
@@ -75,7 +75,7 @@ impl HttpClient {
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
         let headers = init_headers(
-            &self,
+            self,
             HeaderOptions {
                 bearer_token,
                 content_type: Some("application/json".to_string()),
@@ -100,7 +100,7 @@ impl HttpClient {
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
         let headers = init_headers(
-            &self,
+            self,
             HeaderOptions {
                 bearer_token,
                 content_type: Some("application/json".to_string()),
@@ -125,7 +125,7 @@ impl HttpClient {
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
         let headers = init_headers(
-            &self,
+            self,
             HeaderOptions {
                 bearer_token,
                 content_type: Some("application/json".to_string()),
@@ -150,7 +150,7 @@ impl HttpClient {
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
         let headers = init_headers(
-            &self,
+            self,
             HeaderOptions {
                 bearer_token,
                 content_type: Some("application/json".to_string()),
@@ -170,7 +170,7 @@ impl HttpClient {
 
     /// Joins base_uri with path param
     fn fmt_url(&self, path: String) -> String {
-        return format!("{}{}", self.base_uri, path);
+        format!("{}{}", self.base_uri, path)
     }
 }
 
@@ -181,27 +181,17 @@ struct HeaderOptions {
 
 /// combines default headers with optional bearer_token and content_type headers
 fn init_headers(client: &HttpClient, options: HeaderOptions) -> HeaderMap {
-    let mut headers = client
-        .config
-        .headers
-        .clone()
-        .unwrap_or_else(|| HeaderMap::new());
+    let mut headers = client.config.headers.clone().unwrap_or_else(HeaderMap::new);
 
-    match options.bearer_token {
-        Some(token) => {
-            headers.insert(AUTHORIZATION, token.parse().unwrap());
-        }
-        None => {}
+    if let Some(bearer_token) = options.bearer_token {
+        headers.insert(AUTHORIZATION, bearer_token.parse().unwrap());
     }
 
-    match options.content_type {
-        Some(content_type) => {
-            headers.insert(CONTENT_TYPE, content_type.parse().unwrap());
-        }
-        None => {}
+    if let Some(content_type) = options.content_type {
+        headers.insert(CONTENT_TYPE, content_type.parse().unwrap());
     }
 
-    return headers;
+    headers
 }
 
 #[cfg(test)]
