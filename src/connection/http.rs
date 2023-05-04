@@ -25,13 +25,13 @@ impl HttpClient {
         path: String,
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
-        let mut headers = self
-            .config
-            .headers
-            .clone()
-            .unwrap_or_else(|| HeaderMap::new());
-
-        headers = add_auth_header(headers, bearer_token);
+        let headers = init_headers(
+            &self,
+            HeaderOptions {
+                bearer_token,
+                content_type: None,
+            },
+        );
 
         let response = self
             .client
@@ -49,14 +49,13 @@ impl HttpClient {
         payload: Value,
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
-        let mut headers = self
-            .config
-            .headers
-            .clone()
-            .unwrap_or_else(|| HeaderMap::new());
-
-        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
-        headers = add_auth_header(headers, bearer_token);
+        let headers = init_headers(
+            &self,
+            HeaderOptions {
+                bearer_token,
+                content_type: Some("application/json".to_string()),
+            },
+        );
 
         let response = self
             .client
@@ -75,14 +74,13 @@ impl HttpClient {
         payload: Value,
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
-        let mut headers = self
-            .config
-            .headers
-            .clone()
-            .unwrap_or_else(|| HeaderMap::new());
-
-        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
-        headers = add_auth_header(headers, bearer_token);
+        let headers = init_headers(
+            &self,
+            HeaderOptions {
+                bearer_token,
+                content_type: Some("application/json".to_string()),
+            },
+        );
 
         let response = self
             .client
@@ -101,14 +99,13 @@ impl HttpClient {
         payload: Value,
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
-        let mut headers = self
-            .config
-            .headers
-            .clone()
-            .unwrap_or_else(|| HeaderMap::new());
-
-        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
-        headers = add_auth_header(headers, bearer_token);
+        let headers = init_headers(
+            &self,
+            HeaderOptions {
+                bearer_token,
+                content_type: Some("application/json".to_string()),
+            },
+        );
 
         let response = self
             .client
@@ -127,14 +124,13 @@ impl HttpClient {
         payload: Option<Value>,
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
-        let mut headers = self
-            .config
-            .headers
-            .clone()
-            .unwrap_or_else(|| HeaderMap::new());
-
-        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
-        headers = add_auth_header(headers, bearer_token);
+        let headers = init_headers(
+            &self,
+            HeaderOptions {
+                bearer_token,
+                content_type: Some("application/json".to_string()),
+            },
+        );
 
         let response = self
             .client
@@ -153,14 +149,13 @@ impl HttpClient {
         payload: Option<Value>,
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
-        let mut headers = self
-            .config
-            .headers
-            .clone()
-            .unwrap_or_else(|| HeaderMap::new());
-
-        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
-        headers = add_auth_header(headers, bearer_token);
+        let headers = init_headers(
+            &self,
+            HeaderOptions {
+                bearer_token,
+                content_type: Some("application/json".to_string()),
+            },
+        );
 
         let response = self
             .client
@@ -179,13 +174,32 @@ impl HttpClient {
     }
 }
 
-/// inserts the `Authorization` header if the bearer_token is `Some`
-fn add_auth_header(mut headers: HeaderMap, bearer_token: Option<String>) -> HeaderMap {
-    match bearer_token {
+struct HeaderOptions {
+    bearer_token: Option<String>,
+    content_type: Option<String>,
+}
+
+/// combines default headers with optional bearer_token and content_type headers
+fn init_headers(client: &HttpClient, options: HeaderOptions) -> HeaderMap {
+    let mut headers = client
+        .config
+        .headers
+        .clone()
+        .unwrap_or_else(|| HeaderMap::new());
+
+    match options.bearer_token {
         Some(token) => {
             headers.insert(AUTHORIZATION, token.parse().unwrap());
         }
         None => {}
     }
+
+    match options.content_type {
+        Some(content_type) => {
+            headers.insert(CONTENT_TYPE, content_type.parse().unwrap());
+        }
+        None => {}
+    }
+
     return headers;
 }
