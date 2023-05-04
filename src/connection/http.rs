@@ -21,7 +21,7 @@ impl HttpClient {
     }
 
     pub async fn get(
-        self,
+        &self,
         path: String,
         bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
@@ -35,7 +35,7 @@ impl HttpClient {
 
         let response = self
             .client
-            .get(make_url(self.base_uri.clone(), path))
+            .get(self.fmt_url(path))
             .headers(headers)
             .send()
             .await?;
@@ -44,7 +44,7 @@ impl HttpClient {
     }
 
     pub async fn post(
-        self,
+        &self,
         path: String,
         payload: Value,
         bearer_token: Option<String>,
@@ -60,7 +60,7 @@ impl HttpClient {
 
         let response = self
             .client
-            .post(make_url(self.base_uri.clone(), path))
+            .post(self.fmt_url(path))
             .headers(headers)
             .json(&payload)
             .send()
@@ -70,7 +70,7 @@ impl HttpClient {
     }
 
     pub async fn put(
-        self,
+        &self,
         path: String,
         payload: Value,
         bearer_token: Option<String>,
@@ -86,7 +86,7 @@ impl HttpClient {
 
         let response = self
             .client
-            .put(make_url(self.base_uri.clone(), path))
+            .put(self.fmt_url(path))
             .headers(headers)
             .json(&payload)
             .send()
@@ -96,7 +96,7 @@ impl HttpClient {
     }
 
     pub async fn patch(
-        self,
+        &self,
         path: String,
         payload: Value,
         bearer_token: Option<String>,
@@ -112,7 +112,7 @@ impl HttpClient {
 
         let response = self
             .client
-            .patch(make_url(self.base_uri.clone(), path))
+            .patch(self.fmt_url(path))
             .headers(headers)
             .json(&payload)
             .send()
@@ -122,7 +122,7 @@ impl HttpClient {
     }
 
     pub async fn delete(
-        self,
+        &self,
         path: String,
         payload: Option<Value>,
         bearer_token: Option<String>,
@@ -138,7 +138,7 @@ impl HttpClient {
 
         let response = self
             .client
-            .delete(make_url(self.base_uri.clone(), path))
+            .delete(self.fmt_url(path))
             .headers(headers)
             .json(&payload)
             .send()
@@ -148,7 +148,7 @@ impl HttpClient {
     }
 
     pub async fn head(
-        self,
+        &self,
         path: String,
         payload: Option<Value>,
         bearer_token: Option<String>,
@@ -164,7 +164,7 @@ impl HttpClient {
 
         let response = self
             .client
-            .head(make_url(self.base_uri.clone(), path))
+            .head(self.fmt_url(path))
             .headers(headers)
             .json(&payload)
             .send()
@@ -172,12 +172,14 @@ impl HttpClient {
 
         Ok(response)
     }
+
+    /// Joins base_uri with path param
+    fn fmt_url(&self, path: String) -> String {
+        return format!("{}{}", self.base_uri, path);
+    }
 }
 
-fn make_url(base: String, path: String) -> String {
-    return format!("{}{}", base, path);
-}
-
+/// inserts the `Authorization` header if the bearer_token is `Some`
 fn add_auth_header(mut headers: HeaderMap, bearer_token: Option<String>) -> HeaderMap {
     match bearer_token {
         Some(token) => {

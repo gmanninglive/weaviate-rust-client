@@ -1,4 +1,7 @@
-use crate::connection::{Connection, MetaGetter};
+use crate::{
+    command::{meta::MetaGetter, CommandTrait},
+    connection::Connection,
+};
 
 #[async_trait::async_trait]
 pub trait VersionProvider {

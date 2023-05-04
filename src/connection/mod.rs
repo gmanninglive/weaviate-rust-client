@@ -1,16 +1,13 @@
 pub mod http;
 
-use std::iter::Map;
-
-use reqwest::header::HeaderMap;
-
 use http::HttpClient;
+use reqwest::header::HeaderMap;
 
 pub struct OidcAuthenticator {}
 
 pub struct GraphQLClient {}
 
-type HeadersInit = HeaderMap;
+pub type Headers = HeaderMap;
 
 pub type ApiKey = String;
 
@@ -23,38 +20,15 @@ pub struct Connection {
 }
 
 pub struct ConnectionParams {
-    auth_client_secret: Option<String>,
-    api_key: ApiKey,
-    host: String,
-    scheme: String,
-    headers: Option<HeadersInit>,
-}
-
-pub struct MetaGetter {}
-
-pub struct ModuleInfo {
-    version: String,
-    word_count: i32,
-}
-
-pub struct MetaResponse {
-    hostname: String,
-    modules: Map<String, ModuleInfo>,
-    pub version: String,
-}
-
-impl MetaGetter {
-    pub fn new(conn: Connection) -> Self {
-        unimplemented!("meta getter command not implemented")
-    }
-
-    pub async fn r#do(self) -> Result<MetaResponse, anyhow::Error> {
-        unimplemented!("meta do method not implemented")
-    }
+    pub auth_client_secret: Option<String>,
+    pub api_key: ApiKey,
+    pub host: String,
+    pub scheme: String,
+    pub headers: Option<Headers>,
 }
 
 impl Connection {
-    fn new(params: ConnectionParams) -> Self {
+    pub fn new(params: ConnectionParams) -> Self {
         Self {
             api_key: params.api_key.clone(),
             auth_enabled: false,
