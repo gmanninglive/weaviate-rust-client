@@ -1,12 +1,16 @@
+pub mod http;
+
 use std::iter::Map;
+
+use reqwest::header::HeaderMap;
+
+use http::HttpClient;
 
 pub struct OidcAuthenticator {}
 
 pub struct GraphQLClient {}
 
-pub struct HttpClient {}
-
-struct HeadersInit {}
+type HeadersInit = HeaderMap;
 
 pub type ApiKey = String;
 
@@ -52,10 +56,10 @@ impl MetaGetter {
 impl Connection {
     fn new(params: ConnectionParams) -> Self {
         Self {
-            api_key: params.api_key,
+            api_key: params.api_key.clone(),
             auth_enabled: false,
             gql: GraphQLClient {},
-            http: HttpClient {},
+            http: HttpClient::new(params),
             oidc_auth: None,
         }
     }
