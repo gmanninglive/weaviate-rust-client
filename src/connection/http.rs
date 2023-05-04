@@ -203,3 +203,48 @@ fn init_headers(client: &HttpClient, options: HeaderOptions) -> HeaderMap {
 
     return headers;
 }
+
+#[cfg(test)]
+#[allow(unused_imports)]
+mod tests {
+    use super::*;
+    use crate::{command::meta::MetaResponse, connection::Connection};
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn test_get() {
+        let mut server = mockito::Server::new();
+        let mock_response = MetaResponse {
+            hostname: "http://[::]:8080".to_string(),
+            modules: HashMap::new(),
+            version: "1.19.0".to_string(),
+        };
+
+        let mock = server
+            .mock("GET", "/v1/meta")
+            .with_body(
+                serde_json::to_string(&mock_response).expect("error serializing mock response"),
+            )
+            .create();
+
+        let client = HttpClient::new(ConnectionParams {
+            api_key: "".to_string(),
+            host: server.host_with_port(),
+            scheme: "http".to_string(),
+            headers: None,
+            auth_client_secret: None,
+        });
+
+        let response = client
+            .get("/meta".to_string(), None)
+            .await
+            .expect("error fetching meta data")
+            .json::<MetaResponse>()
+            .await
+            .expect("error deserializing met data");
+
+        mock.assert();
+
+        assert_eq!(mock_response, response);
+    }
+}
