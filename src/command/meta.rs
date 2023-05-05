@@ -35,7 +35,7 @@ impl CommandTrait<MetaResponse> for MetaGetter {
 #[allow(unused_imports)]
 mod tests {
     use super::*;
-    use crate::connection::{http::HttpParams, Auth, AuthParams, Connection, ConnectionParams};
+    use crate::connection::{http::HttpParams, Auth, AuthParams, Connection, ConnectionBuilder};
 
     #[tokio::test]
     async fn test_meta_getter_do() {
@@ -51,12 +51,7 @@ mod tests {
             .with_body(serde_json::to_string(&response).expect("error serializing mock response"))
             .create();
 
-        let conn = Connection::new(ConnectionParams {
-            host: server.host_with_port(),
-            scheme: "http".to_string(),
-            headers: None,
-            auth: AuthParams::None,
-        });
+        let conn = ConnectionBuilder::new("http", server.host_with_port()).build();
 
         let meta = MetaGetter::new(conn)
             .r#do()

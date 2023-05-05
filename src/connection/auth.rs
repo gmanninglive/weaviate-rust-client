@@ -1,7 +1,10 @@
+use std::default;
+
 pub type ApiKey = Option<String>;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub enum Auth {
+    #[default]
     None,
     ApiKey(String),
     Oidc(Oidc),

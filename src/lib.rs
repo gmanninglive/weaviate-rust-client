@@ -2,6 +2,8 @@ pub mod command;
 pub mod connection;
 pub mod utils;
 
+pub use connection::*;
+
 #[cfg(test)]
 mod tests {
     #[test]

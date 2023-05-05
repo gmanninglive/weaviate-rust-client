@@ -1,9 +1,9 @@
 mod auth;
 pub mod http;
-pub use auth::Auth;
 
 use crate::utils::string::trim_trailing_slash;
-use auth::{Oidc, OidcCredentials};
+pub use auth::Auth;
+use auth::OidcCredentials;
 use http::HttpClient;
 use http::HttpParams;
 use reqwest::header::HeaderMap;
@@ -24,41 +24,65 @@ pub enum AuthParams {
     Oidc(OidcCredentials),
 }
 
-pub struct ConnectionParams {
+///
+/// # Weaviate ConnectionBuilder
+///
+/// ## Limitations
+/// Oidc Auth is not fully implemented
+///
+/// ## Examples
+/// ```
+/// use weaviate_client::{ConnectionBuilder, Connection};
+///
+/// let conn = ConnectionBuilder::new("http", "localhost:8080").build();
+/// ```
+#[derive(Default)]
+pub struct ConnectionBuilder {
     pub host: String,
     pub scheme: String,
     pub headers: Option<Headers>,
-    pub auth: AuthParams,
+    pub auth: Auth,
 }
 
-impl Connection {
-    pub fn new(params: ConnectionParams) -> Self {
-        let auth = match params.auth {
-            AuthParams::AccessToken(key) => Auth::ApiKey(key),
-            AuthParams::Oidc(credentials) => Auth::Oidc(Oidc {
-                credentials,
-                token: None,
-            }),
-            AuthParams::None => Auth::None,
-        };
-
+impl ConnectionBuilder {
+    pub fn new(scheme: impl Into<String>, host: impl Into<String>) -> Self {
         Self {
-            auth: auth.clone(),
-            http: HttpClient::new(HttpParams {
-                auth,
-                scheme: params.scheme,
-                host: trim_trailing_slash(params.host),
-                headers: params.headers,
-            }),
+            scheme: scheme.into(),
+            host: host.into(),
+            ..Default::default()
+        }
+    }
+
+    pub fn headers(&mut self, headers: Headers) -> &mut Self {
+        let _ = self.headers.insert(headers);
+        self
+    }
+
+    pub fn auth(&mut self, auth: Auth) -> &mut Self {
+        self.auth = auth;
+        self
+    }
+
+    pub fn build(&self) -> Connection {
+        Connection {
             gql: GraphQLClient {},
+            auth: self.auth.clone(),
+            http: HttpClient::new(HttpParams {
+                auth: self.auth.clone(),
+                scheme: self.scheme.clone(),
+                host: trim_trailing_slash(self.host.clone()),
+                headers: self.headers.clone(),
+            }),
         }
     }
 }
 
-pub fn auth_enabled(auth: &Auth) -> bool {
-    match auth {
-        Auth::ApiKey(_) => true,
-        Auth::Oidc(_) => true,
-        Auth::None => false,
+impl Connection {
+    pub fn auth_enabled(&self) -> bool {
+        match self.auth {
+            Auth::ApiKey(_) => true,
+            Auth::Oidc(_) => true,
+            Auth::None => false,
+        }
     }
 }
