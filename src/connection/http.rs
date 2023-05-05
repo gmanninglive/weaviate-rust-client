@@ -35,7 +35,7 @@ impl HttpClient {
 
     async fn login(&self) {
         if let Auth::Oidc(config) = &self.auth {
-            Auth::Oidc(OidcAuthenticator::new(&config.credentials).refresh());
+            OidcAuthenticator::new(&config.credentials).refresh();
         }
     }
 

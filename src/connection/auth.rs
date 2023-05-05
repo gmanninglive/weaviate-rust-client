@@ -1,4 +1,4 @@
-use std::default;
+
 
 pub type ApiKey = Option<String>;
 
@@ -31,7 +31,7 @@ pub struct Oidc {
 
 pub struct OidcAuthenticator {}
 impl OidcAuthenticator {
-    pub fn new(credentials: &OidcCredentials) -> Self {
+    pub fn new(_credentials: &OidcCredentials) -> Self {
         unimplemented!("oidc not implemented!")
     }
 

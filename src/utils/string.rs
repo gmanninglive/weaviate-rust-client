@@ -1,8 +1,8 @@
 pub fn trim_trailing_slash(string: String) -> String {
-    if string.ends_with("/") {
+    if string.ends_with('/') {
         return string[0..string.len() - 1].to_string();
     }
-    return string;
+    string
 }
 
 #[cfg(test)]
