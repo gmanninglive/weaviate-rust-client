@@ -1,7 +1,8 @@
 mod auth;
 pub mod http;
-
 pub use auth::Auth;
+
+use crate::utils::string::trim_trailing_slash;
 use auth::{Oidc, OidcCredentials};
 use http::HttpClient;
 use http::HttpParams;
@@ -46,18 +47,18 @@ impl Connection {
             http: HttpClient::new(HttpParams {
                 auth,
                 scheme: params.scheme,
-                host: params.host,
+                host: trim_trailing_slash(params.host),
                 headers: params.headers,
             }),
             gql: GraphQLClient {},
         }
     }
+}
 
-    fn auth_enabled(&self) -> bool {
-        match self.auth {
-            Auth::ApiKey(_) => true,
-            Auth::Oidc(_) => true,
-            Auth::None => false,
-        }
+pub fn auth_enabled(auth: &Auth) -> bool {
+    match auth {
+        Auth::ApiKey(_) => true,
+        Auth::Oidc(_) => true,
+        Auth::None => false,
     }
 }
