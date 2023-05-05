@@ -22,12 +22,7 @@ pub struct MetaResponse {
 #[async_trait::async_trait]
 impl CommandTrait<MetaResponse> for MetaGetter {
     async fn r#do(&self) -> Result<MetaResponse, anyhow::Error> {
-        let res: MetaResponse = self
-            .client
-            .get("/meta".to_string(), None)
-            .await?
-            .json()
-            .await?;
+        let res: MetaResponse = self.client.get("/meta".to_string()).await?.json().await?;
         Ok(res)
     }
 
@@ -40,7 +35,7 @@ impl CommandTrait<MetaResponse> for MetaGetter {
 #[allow(unused_imports)]
 mod tests {
     use super::*;
-    use crate::connection::{Connection, ConnectionParams};
+    use crate::connection::{http::HttpParams, Auth, AuthParams, Connection, ConnectionParams};
 
     #[tokio::test]
     async fn test_meta_getter_do() {
@@ -57,11 +52,10 @@ mod tests {
             .create();
 
         let conn = Connection::new(ConnectionParams {
-            api_key: "".to_string(),
             host: server.host_with_port(),
             scheme: "http".to_string(),
             headers: None,
-            auth_client_secret: None,
+            auth: AuthParams::None,
         });
 
         let meta = MetaGetter::new(conn)

@@ -1,37 +1,48 @@
-use super::ConnectionParams;
+use super::{auth::Auth, auth::OidcAuthenticator, Headers};
 use reqwest::{
     header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE},
     Response,
 };
 use serde_json::Value;
 
+pub struct HttpParams {
+    pub host: String,
+    pub scheme: String,
+    pub headers: Option<Headers>,
+    pub auth: Auth,
+}
+
 pub struct HttpClient {
-    config: ConnectionParams,
     client: reqwest::Client,
     base_uri: String,
+    host: String,
+    scheme: String,
+    headers: Option<Headers>,
+    auth: Auth,
 }
 
 impl HttpClient {
-    pub fn new(config: ConnectionParams) -> Self {
+    pub fn new(params: HttpParams) -> Self {
         Self {
-            base_uri: format!("{}://{}/v1", config.scheme, config.host),
-            config,
+            base_uri: format!("{}://{}/v1", params.scheme, params.host),
             client: reqwest::Client::new(),
+            scheme: params.scheme,
+            host: params.host,
+            auth: params.auth,
+            headers: params.headers,
         }
     }
 
-    pub async fn get(
-        &self,
-        path: String,
-        bearer_token: Option<String>,
-    ) -> Result<Response, anyhow::Error> {
-        let headers = init_headers(
-            self,
-            HeaderOptions {
-                bearer_token,
-                content_type: None,
-            },
-        );
+    async fn login(&self) {
+        if let Auth::Oidc(config) = &self.auth {
+            Auth::Oidc(OidcAuthenticator::new(&config.credentials).refresh());
+        }
+    }
+
+    pub async fn get(&self, path: String) -> Result<Response, anyhow::Error> {
+        self.login().await;
+
+        let headers = init_headers(self, HeaderOptions { content_type: None });
 
         let response = self
             .client
@@ -43,16 +54,12 @@ impl HttpClient {
         Ok(response)
     }
 
-    pub async fn post(
-        &self,
-        path: String,
-        payload: Value,
-        bearer_token: Option<String>,
-    ) -> Result<Response, anyhow::Error> {
+    pub async fn post(&self, path: String, payload: Value) -> Result<Response, anyhow::Error> {
+        self.login().await;
+
         let headers = init_headers(
             self,
             HeaderOptions {
-                bearer_token,
                 content_type: Some("application/json".to_string()),
             },
         );
@@ -68,16 +75,12 @@ impl HttpClient {
         Ok(response)
     }
 
-    pub async fn put(
-        &self,
-        path: String,
-        payload: Value,
-        bearer_token: Option<String>,
-    ) -> Result<Response, anyhow::Error> {
+    pub async fn put(&self, path: String, payload: Value) -> Result<Response, anyhow::Error> {
+        self.login().await;
+
         let headers = init_headers(
             self,
             HeaderOptions {
-                bearer_token,
                 content_type: Some("application/json".to_string()),
             },
         );
@@ -93,16 +96,12 @@ impl HttpClient {
         Ok(response)
     }
 
-    pub async fn patch(
-        &self,
-        path: String,
-        payload: Value,
-        bearer_token: Option<String>,
-    ) -> Result<Response, anyhow::Error> {
+    pub async fn patch(&self, path: String, payload: Value) -> Result<Response, anyhow::Error> {
+        self.login().await;
+
         let headers = init_headers(
             self,
             HeaderOptions {
-                bearer_token,
                 content_type: Some("application/json".to_string()),
             },
         );
@@ -122,12 +121,12 @@ impl HttpClient {
         &self,
         path: String,
         payload: Option<Value>,
-        bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
+        self.login().await;
+
         let headers = init_headers(
             self,
             HeaderOptions {
-                bearer_token,
                 content_type: Some("application/json".to_string()),
             },
         );
@@ -147,12 +146,12 @@ impl HttpClient {
         &self,
         path: String,
         payload: Option<Value>,
-        bearer_token: Option<String>,
     ) -> Result<Response, anyhow::Error> {
+        self.login().await;
+
         let headers = init_headers(
             self,
             HeaderOptions {
-                bearer_token,
                 content_type: Some("application/json".to_string()),
             },
         );
@@ -175,16 +174,24 @@ impl HttpClient {
 }
 
 struct HeaderOptions {
-    bearer_token: Option<String>,
     content_type: Option<String>,
 }
 
 /// combines default headers with optional bearer_token and content_type headers
 fn init_headers(client: &HttpClient, options: HeaderOptions) -> HeaderMap {
-    let mut headers = client.config.headers.clone().unwrap_or_else(HeaderMap::new);
+    let mut headers = client.headers.clone().unwrap_or_else(HeaderMap::new);
 
-    if let Some(bearer_token) = options.bearer_token {
-        headers.insert(AUTHORIZATION, bearer_token.parse().unwrap());
+    match &client.auth {
+        Auth::Oidc(oidc) => {
+            let token = oidc.token.clone().expect("access token missing");
+            let token = format!("{} {}", token.token_type, token.access_token);
+
+            headers.insert(AUTHORIZATION, token.parse().unwrap());
+        }
+        Auth::ApiKey(key) => {
+            headers.insert(AUTHORIZATION, key.parse().unwrap());
+        }
+        Auth::None => {}
     }
 
     if let Some(content_type) = options.content_type {
@@ -217,16 +224,15 @@ mod tests {
             )
             .create();
 
-        let client = HttpClient::new(ConnectionParams {
-            api_key: "".to_string(),
+        let client = HttpClient::new(HttpParams {
             host: server.host_with_port(),
             scheme: "http".to_string(),
             headers: None,
-            auth_client_secret: None,
+            auth: Auth::None,
         });
 
         let response = client
-            .get("/meta".to_string(), None)
+            .get("/meta".to_string())
             .await
             .expect("error fetching meta data")
             .json::<MetaResponse>()

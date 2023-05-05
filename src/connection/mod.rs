@@ -1,40 +1,63 @@
+mod auth;
 pub mod http;
 
+pub use auth::Auth;
+use auth::{Oidc, OidcCredentials};
 use http::HttpClient;
+use http::HttpParams;
 use reqwest::header::HeaderMap;
-
-pub struct OidcAuthenticator {}
 
 pub struct GraphQLClient {}
 
 pub type Headers = HeaderMap;
 
-pub type ApiKey = String;
-
 pub struct Connection {
-    api_key: ApiKey,
-    auth_enabled: bool,
     gql: GraphQLClient,
+    auth: Auth,
     pub http: HttpClient,
-    pub oidc_auth: Option<OidcAuthenticator>,
+}
+
+pub enum AuthParams {
+    None,
+    AccessToken(String),
+    Oidc(OidcCredentials),
 }
 
 pub struct ConnectionParams {
-    pub auth_client_secret: Option<String>,
-    pub api_key: ApiKey,
     pub host: String,
     pub scheme: String,
     pub headers: Option<Headers>,
+    pub auth: AuthParams,
 }
 
 impl Connection {
     pub fn new(params: ConnectionParams) -> Self {
+        let auth = match params.auth {
+            AuthParams::AccessToken(key) => Auth::ApiKey(key),
+            AuthParams::Oidc(credentials) => Auth::Oidc(Oidc {
+                credentials,
+                token: None,
+            }),
+            AuthParams::None => Auth::None,
+        };
+
         Self {
-            api_key: params.api_key.clone(),
-            auth_enabled: false,
+            auth: auth.clone(),
+            http: HttpClient::new(HttpParams {
+                auth,
+                scheme: params.scheme,
+                host: params.host,
+                headers: params.headers,
+            }),
             gql: GraphQLClient {},
-            http: HttpClient::new(params),
-            oidc_auth: None,
+        }
+    }
+
+    fn auth_enabled(&self) -> bool {
+        match self.auth {
+            Auth::ApiKey(_) => true,
+            Auth::Oidc(_) => true,
+            Auth::None => false,
         }
     }
 }
