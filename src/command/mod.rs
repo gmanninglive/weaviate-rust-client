@@ -22,7 +22,7 @@ pub trait CommandTrait<T> {
 impl Command {
     pub fn new(conn: Connection) -> Self {
         Self {
-            client: conn.http,
+            client: conn.client,
             errors: Vec::new(),
         }
     }

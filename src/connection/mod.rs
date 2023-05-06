@@ -8,14 +8,11 @@ use http::HttpClient;
 use http::HttpParams;
 use reqwest::header::HeaderMap;
 
-pub struct GraphQLClient {}
-
 pub type Headers = HeaderMap;
 
 pub struct Connection {
-    gql: GraphQLClient,
     auth: Auth,
-    pub http: HttpClient,
+    pub client: HttpClient,
 }
 
 pub enum AuthParams {
@@ -65,9 +62,8 @@ impl ConnectionBuilder {
 
     pub fn build(&self) -> Connection {
         Connection {
-            gql: GraphQLClient {},
             auth: self.auth.clone(),
-            http: HttpClient::new(HttpParams {
+            client: HttpClient::new(HttpParams {
                 auth: self.auth.clone(),
                 scheme: self.scheme.clone(),
                 host: trim_trailing_slash(self.host.clone()),
