@@ -2,9 +2,22 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::{Command, CommandTrait};
+use crate::{http::HttpClient, Connection};
 
-pub type MetaGetter = Command;
+use super::Command;
+
+pub struct MetaGetter {
+    /// The client's connection
+    pub client: HttpClient,
+}
+
+impl MetaGetter {
+    pub fn new(conn: Connection) -> Self {
+        Self {
+            client: conn.client,
+        }
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct ModuleInfo {
@@ -20,7 +33,7 @@ pub struct MetaResponse {
 }
 
 #[async_trait::async_trait]
-impl CommandTrait<MetaResponse> for MetaGetter {
+impl Command<MetaResponse> for MetaGetter {
     async fn r#do(&self) -> Result<MetaResponse, anyhow::Error> {
         let res: MetaResponse = self.client.get("/meta".to_string()).await?.json().await?;
         Ok(res)

@@ -1,5 +1,5 @@
 use crate::{
-    command::{meta::MetaGetter, CommandTrait},
+    command::{meta::MetaGetter, Command},
     connection::Connection,
 };
 

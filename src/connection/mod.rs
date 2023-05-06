@@ -10,6 +10,7 @@ use reqwest::header::HeaderMap;
 
 pub type Headers = HeaderMap;
 
+#[derive(Clone)]
 pub struct Connection {
     auth: Auth,
     pub client: HttpClient,

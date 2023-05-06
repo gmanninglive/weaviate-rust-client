@@ -11,6 +11,7 @@ pub struct HttpParams {
     pub auth: Auth,
 }
 
+#[derive(Clone)]
 pub struct HttpClient {
     client: reqwest::Client,
     base_uri: String,
@@ -206,8 +207,8 @@ impl HttpClient {
     ///
     /// #[derive(GraphQLQuery)]
     /// #[graphql(
-    ///    schema_path = "tests/unions/union_schema.graphql",
-    ///    query_path = "tests/unions/union_query.graphql",
+    ///    schema_path = "tests/graphql/unions/union_schema.graphql",
+    ///    query_path = "tests/graphql/unions/union_query.graphql",
     ///    response_derives = "Debug",
     /// )]
     /// pub struct UnionQuery;
