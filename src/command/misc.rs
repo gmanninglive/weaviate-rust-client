@@ -1,5 +1,6 @@
 use super::Command;
 use crate::{http::HttpClient, utils::db_version::DbVersionProvider, Connection};
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -66,10 +67,11 @@ impl LiveChecker {
 #[async_trait::async_trait]
 impl Command<bool> for LiveChecker {
     async fn r#do(&self) -> Result<bool, anyhow::Error> {
-        let well_known = self.client.get("/.well-known/live").await.is_ok();
-        let version = self.db_version_provider.clone().get().await;
+        let well_known = self.client.get("/.well-known/live").await?.status();
 
-        Ok(well_known && version.is_ok())
+        let version = self.db_version_provider.clone().get().await?;
+
+        Ok(StatusCode::le(&well_known, &StatusCode::BAD_REQUEST) && !version.is_empty())
     }
 
     fn validate() {

@@ -110,14 +110,29 @@ mod tests {
 
     #[tokio::test]
     async fn live_checker_works() {
-        let client = WeaviateClientBuilder::new("http", "localhost:8080").build();
+        let mut server = mockito::Server::new();
+        let response = command::misc::MetaResponse {
+            hostname: "http://[::]:8080".to_string(),
+            modules: HashMap::new(),
+            version: "1.19.0".to_string(),
+        };
+
+        server
+            .mock("GET", "/v1/meta")
+            .with_body(serde_json::to_string(&response).expect("error serializing mock response"))
+            .create();
+
+        let well_known_mock = server.mock("GET", "/v1/.well-known/live").create();
+
+        let client = WeaviateClientBuilder::new("http", server.host_with_port()).build();
         let misc = client.misc();
         let is_live = misc
             .check_live
             .r#do()
             .await
-            .expect("error fetching meta data");
+            .expect("error checking is live");
 
+        well_known_mock.assert();
         assert!(is_live);
     }
 }
