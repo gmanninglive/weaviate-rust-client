@@ -9,7 +9,7 @@ pub fn trim_trailing_slash(string: String) -> String {
 mod tests {
     use super::*;
     #[test]
-    fn trimemove_trailing_slash() {
+    fn test_trim_trailing_slash() {
         let test_case_1 = trim_trailing_slash("test/".to_owned());
         let test_case_2 = trim_trailing_slash("testing".to_owned());
 

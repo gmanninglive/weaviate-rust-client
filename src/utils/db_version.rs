@@ -1,6 +1,7 @@
 use crate::{
     command::{misc::MetaGetter, Command},
     connection::Connection,
+    prelude::*,
 };
 
 #[async_trait::async_trait]
@@ -77,7 +78,7 @@ impl<'a> DbVersionProvider<'a> {
         }
     }
 
-    pub async fn get(mut self) -> Result<String, anyhow::Error> {
+    pub async fn get(mut self) -> Result<String> {
         match self.version {
             Some(version) => Ok(version),
             None => {

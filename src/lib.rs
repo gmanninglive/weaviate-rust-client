@@ -1,6 +1,9 @@
 pub mod command;
 pub mod connection;
+pub mod prelude;
 pub mod utils;
+
+pub use prelude::*;
 
 pub use command::{
     misc::{MetaGetter, Misc},
@@ -72,6 +75,8 @@ impl WeaviateClient {
 
 #[cfg(test)]
 mod tests {
+    use reqwest::Client;
+
     use super::*;
     use std::collections::HashMap;
 

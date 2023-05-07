@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use crate::{command::Command, Connection};
 
 #[derive(Default)]
@@ -45,7 +46,7 @@ impl<'a> GraphQLGetter<'a> {
 
 #[async_trait::async_trait]
 impl Command<String> for GraphQLGetter<'_> {
-    async fn r#do(&self) -> Result<String, anyhow::Error> {
+    async fn r#do(&self) -> Result<String> {
         todo!();
     }
 

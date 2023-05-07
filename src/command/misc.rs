@@ -1,4 +1,5 @@
 use super::Command;
+use crate::prelude::*;
 use crate::Connection;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -48,7 +49,7 @@ pub struct MetaResponse {
 
 #[async_trait::async_trait]
 impl<'a> Command<MetaResponse> for MetaGetter<'a> {
-    async fn r#do(&self) -> Result<MetaResponse, anyhow::Error> {
+    async fn r#do(&self) -> Result<MetaResponse> {
         let res: MetaResponse = self
             .conn
             .client
@@ -71,7 +72,7 @@ pub struct LiveChecker<'a> {
 
 #[async_trait::async_trait]
 impl<'a> Command<bool> for LiveChecker<'a> {
-    async fn r#do(&self) -> Result<bool, anyhow::Error> {
+    async fn r#do(&self) -> Result<bool> {
         let well_known = self.conn.client.get("/.well-known/live").await?.status();
 
         let version = self.conn.db_version().get().await?;
@@ -91,7 +92,7 @@ pub struct ReadyChecker<'a> {
 
 #[async_trait::async_trait]
 impl<'a> Command<bool> for ReadyChecker<'a> {
-    async fn r#do(&self) -> Result<bool, anyhow::Error> {
+    async fn r#do(&self) -> Result<bool> {
         let well_known = self.conn.client.get("/.well-known/ready").await?;
 
         let version = self.conn.db_version().get().await?;
@@ -114,7 +115,7 @@ struct OpenIdConfiguration {}
 
 #[async_trait::async_trait]
 impl<'a> Command<OpenIdConfiguration> for OpenidConfigurationGetter<'a> {
-    async fn r#do(&self) -> Result<OpenIdConfiguration, anyhow::Error> {
+    async fn r#do(&self) -> Result<OpenIdConfiguration> {
         Ok(self
             .conn
             .client

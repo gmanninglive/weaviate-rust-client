@@ -1,4 +1,5 @@
 use super::{auth::Auth, auth::OidcAuthenticator, Headers};
+use crate::prelude::*;
 use reqwest::{
     header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE},
     Response,
@@ -35,7 +36,7 @@ impl HttpClient {
         }
     }
 
-    pub async fn get(&self, path: impl Into<String>) -> Result<Response, anyhow::Error> {
+    pub async fn get(&self, path: impl Into<String>) -> Result<Response> {
         self.login().await;
 
         let headers = init_headers(self, HeaderOptions { content_type: None });
@@ -45,16 +46,13 @@ impl HttpClient {
             .get(self.fmt_url(path.into()))
             .headers(headers)
             .send()
-            .await?;
+            .await?
+            .error_for_status()?;
 
         Ok(response)
     }
 
-    pub async fn post<P>(
-        &self,
-        path: impl Into<String>,
-        payload: P,
-    ) -> Result<Response, anyhow::Error>
+    pub async fn post<P>(&self, path: impl Into<String>, payload: P) -> Result<Response>
     where
         P: serde::Serialize,
     {
@@ -73,16 +71,13 @@ impl HttpClient {
             .headers(headers)
             .json(&payload)
             .send()
-            .await?;
+            .await?
+            .error_for_status()?;
 
         Ok(response)
     }
 
-    pub async fn put<P>(
-        &self,
-        path: impl Into<String>,
-        payload: P,
-    ) -> Result<Response, anyhow::Error>
+    pub async fn put<P>(&self, path: impl Into<String>, payload: P) -> Result<Response>
     where
         P: serde::Serialize,
     {
@@ -101,16 +96,13 @@ impl HttpClient {
             .headers(headers)
             .json(&payload)
             .send()
-            .await?;
+            .await?
+            .error_for_status()?;
 
         Ok(response)
     }
 
-    pub async fn patch<P>(
-        &self,
-        path: impl Into<String>,
-        payload: P,
-    ) -> Result<Response, anyhow::Error>
+    pub async fn patch<P>(&self, path: impl Into<String>, payload: P) -> Result<Response>
     where
         P: serde::Serialize,
     {
@@ -129,16 +121,13 @@ impl HttpClient {
             .headers(headers)
             .json(&payload)
             .send()
-            .await?;
+            .await?
+            .error_for_status()?;
 
         Ok(response)
     }
 
-    pub async fn delete<P>(
-        &self,
-        path: impl Into<String>,
-        payload: P,
-    ) -> Result<Response, anyhow::Error>
+    pub async fn delete<P>(&self, path: impl Into<String>, payload: P) -> Result<Response>
     where
         P: serde::Serialize,
     {
@@ -157,16 +146,13 @@ impl HttpClient {
             .headers(headers)
             .json(&payload)
             .send()
-            .await?;
+            .await?
+            .error_for_status()?;
 
         Ok(response)
     }
 
-    pub async fn head<P>(
-        &self,
-        path: impl Into<String>,
-        payload: P,
-    ) -> Result<Response, anyhow::Error>
+    pub async fn head<P>(&self, path: impl Into<String>, payload: P) -> Result<Response>
     where
         P: serde::Serialize,
     {
@@ -185,7 +171,8 @@ impl HttpClient {
             .headers(headers)
             .json(&payload)
             .send()
-            .await?;
+            .await?
+            .error_for_status()?;
 
         Ok(response)
     }
@@ -200,6 +187,7 @@ impl HttpClient {
     ///```
     /// use graphql_client::GraphQLQuery;
     /// use weaviate_client::ConnectionBuilder;
+    /// use weaviate_client::prelude::*;
     ///
     /// #[derive(GraphQLQuery)]
     /// #[graphql(
@@ -209,7 +197,7 @@ impl HttpClient {
     /// )]
     /// pub struct UnionQuery;
     ///
-    /// async fn query_data() -> Result<union_query::ResponseData, anyhow::Error> {
+    /// async fn query_data() -> Result<union_query::ResponseData> {
     ///     let request_body = UnionQuery::build_query(union_query::Variables);
     ///
     ///     let client = ConnectionBuilder::new("http", "localhost:8080").build().client;
@@ -220,11 +208,16 @@ impl HttpClient {
     pub async fn query<T>(
         &self,
         gql_body: graphql_client::QueryBody<impl serde::Serialize>,
-    ) -> Result<T, anyhow::Error>
+    ) -> Result<T>
     where
         T: for<'de> serde::Deserialize<'de>,
     {
-        let response = self.post("/graphql", gql_body).await?.json::<T>().await?;
+        let response = self
+            .post("/graphql", gql_body)
+            .await?
+            .error_for_status()?
+            .json::<T>()
+            .await?;
 
         Ok(response)
     }
