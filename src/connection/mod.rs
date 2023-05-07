@@ -1,6 +1,7 @@
 mod auth;
 pub mod http;
 
+use crate::utils::db_version::DbVersionProvider;
 use crate::utils::string::trim_trailing_slash;
 pub use auth::Auth;
 use auth::OidcCredentials;
@@ -78,5 +79,9 @@ impl Connection {
             Auth::Oidc(_) => true,
             Auth::None => false,
         }
+    }
+
+    pub fn db_version(&self) -> DbVersionProvider<'_> {
+        DbVersionProvider::new(self)
     }
 }

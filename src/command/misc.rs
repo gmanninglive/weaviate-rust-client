@@ -1,47 +1,36 @@
 use super::Command;
-use crate::{http::HttpClient, utils::db_version::DbVersionProvider, Connection};
+use crate::Connection;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// ## Misc Commands
+#[derive(derive_new::new)]
 pub struct Misc<'a> {
     conn: &'a Connection,
 }
 
 impl<'a> Misc<'a> {
-    pub fn new(conn: &'a Connection) -> Self {
-        Self { conn }
-    }
-
-    pub fn get_meta(self) -> MetaGetter {
+    pub fn get_meta(self) -> MetaGetter<'a> {
         MetaGetter::new(self.conn)
     }
 
-    pub fn check_live(self) -> LiveChecker {
+    pub fn check_live(self) -> LiveChecker<'a> {
         LiveChecker::new(self.conn)
     }
 
-    pub fn check_ready(self) -> ReadyChecker {
+    pub fn check_ready(self) -> ReadyChecker<'a> {
         ReadyChecker::new(self.conn)
     }
 
-    pub fn get_openid_configuration(self) -> OpenidConfigurationGetter {
+    pub fn get_openid_configuration(self) -> OpenidConfigurationGetter<'a> {
         OpenidConfigurationGetter::new(self.conn)
     }
 }
 
-#[derive(Clone)]
-pub struct MetaGetter {
-    client: HttpClient,
-}
-
-impl MetaGetter {
-    pub fn new(conn: &Connection) -> Self {
-        Self {
-            client: conn.client.clone(),
-        }
-    }
+#[derive(Clone, derive_new::new)]
+pub struct MetaGetter<'a> {
+    conn: &'a Connection,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -58,9 +47,15 @@ pub struct MetaResponse {
 }
 
 #[async_trait::async_trait]
-impl Command<MetaResponse> for MetaGetter {
+impl<'a> Command<MetaResponse> for MetaGetter<'a> {
     async fn r#do(&self) -> Result<MetaResponse, anyhow::Error> {
-        let res: MetaResponse = self.client.get("/meta".to_string()).await?.json().await?;
+        let res: MetaResponse = self
+            .conn
+            .client
+            .get("/meta".to_string())
+            .await?
+            .json()
+            .await?;
         Ok(res)
     }
 
@@ -69,26 +64,17 @@ impl Command<MetaResponse> for MetaGetter {
     }
 }
 
-pub struct LiveChecker {
-    client: HttpClient,
-    db_version_provider: DbVersionProvider,
-}
-
-impl LiveChecker {
-    pub fn new(conn: &Connection) -> Self {
-        Self {
-            client: conn.client.clone(),
-            db_version_provider: DbVersionProvider::new(conn),
-        }
-    }
+#[derive(derive_new::new)]
+pub struct LiveChecker<'a> {
+    conn: &'a Connection,
 }
 
 #[async_trait::async_trait]
-impl Command<bool> for LiveChecker {
+impl<'a> Command<bool> for LiveChecker<'a> {
     async fn r#do(&self) -> Result<bool, anyhow::Error> {
-        let well_known = self.client.get("/.well-known/live").await?.status();
+        let well_known = self.conn.client.get("/.well-known/live").await?.status();
 
-        let version = self.db_version_provider.clone().get().await?;
+        let version = self.conn.db_version().get().await?;
 
         Ok(StatusCode::le(&well_known, &StatusCode::BAD_REQUEST) && !version.is_empty())
     }
@@ -98,26 +84,17 @@ impl Command<bool> for LiveChecker {
     }
 }
 
-pub struct ReadyChecker {
-    client: HttpClient,
-    db_version_provider: DbVersionProvider,
-}
-
-impl ReadyChecker {
-    pub fn new(conn: &Connection) -> Self {
-        Self {
-            client: conn.client.clone(),
-            db_version_provider: DbVersionProvider::new(conn),
-        }
-    }
+#[derive(derive_new::new)]
+pub struct ReadyChecker<'a> {
+    conn: &'a Connection,
 }
 
 #[async_trait::async_trait]
-impl Command<bool> for ReadyChecker {
+impl<'a> Command<bool> for ReadyChecker<'a> {
     async fn r#do(&self) -> Result<bool, anyhow::Error> {
-        let well_known = self.client.get("/.well-known/ready").await?;
+        let well_known = self.conn.client.get("/.well-known/ready").await?;
 
-        let version = self.db_version_provider.clone().get().await?;
+        let version = self.conn.db_version().get().await?;
 
         Ok(StatusCode::le(&well_known.status(), &StatusCode::BAD_REQUEST) && !version.is_empty())
     }
@@ -127,25 +104,19 @@ impl Command<bool> for ReadyChecker {
     }
 }
 
-pub struct OpenidConfigurationGetter {
-    client: HttpClient,
-}
-
-impl OpenidConfigurationGetter {
-    pub fn new(conn: &Connection) -> Self {
-        Self {
-            client: conn.client.clone(),
-        }
-    }
+#[derive(derive_new::new)]
+pub struct OpenidConfigurationGetter<'a> {
+    conn: &'a Connection,
 }
 
 #[derive(Deserialize, Serialize)]
 struct OpenIdConfiguration {}
 
 #[async_trait::async_trait]
-impl Command<OpenIdConfiguration> for OpenidConfigurationGetter {
+impl<'a> Command<OpenIdConfiguration> for OpenidConfigurationGetter<'a> {
     async fn r#do(&self) -> Result<OpenIdConfiguration, anyhow::Error> {
         Ok(self
+            .conn
             .client
             .get("/.well-known/openid-configuration")
             .await?

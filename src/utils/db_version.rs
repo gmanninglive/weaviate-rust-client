@@ -8,8 +8,8 @@ pub trait VersionProvider {
     async fn get_version() -> String;
 }
 
-pub struct DbVersionSupport {
-    db_version_provider: DbVersionProvider,
+pub struct DbVersionSupport<'a> {
+    db_version_provider: DbVersionProvider<'a>,
 }
 
 struct SupportReponse {
@@ -18,8 +18,8 @@ struct SupportReponse {
     warns: VersionWarnings,
 }
 
-impl DbVersionSupport {
-    fn new(db_version_provider: DbVersionProvider) -> Self {
+impl<'a> DbVersionSupport<'a> {
+    fn new(db_version_provider: DbVersionProvider<'a>) -> Self {
         Self {
             db_version_provider,
         }
@@ -57,20 +57,20 @@ impl DbVersionSupport {
 }
 
 #[derive(Clone)]
-pub struct DbVersionProvider {
+pub struct DbVersionProvider<'a> {
     version: Option<String>,
-    version_getter: MetaGetter,
+    version_getter: MetaGetter<'a>,
 }
 
 #[async_trait::async_trait]
-impl VersionProvider for DbVersionProvider {
+impl<'a> VersionProvider for DbVersionProvider<'a> {
     async fn get_version() -> String {
         unimplemented!("get version")
     }
 }
 
-impl DbVersionProvider {
-    pub fn new(conn: &Connection) -> Self {
+impl<'a> DbVersionProvider<'a> {
+    pub fn new(conn: &'a Connection) -> Self {
         Self {
             version: None,
             version_getter: MetaGetter::new(conn),
