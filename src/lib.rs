@@ -11,7 +11,7 @@ pub use command::{
 };
 pub use connection::*;
 
-use command::graphql::GraphQL;
+use command::{graphql::GraphQL, schema::Schema};
 
 pub struct WeaviateClient {
     conn: Connection,
@@ -63,8 +63,11 @@ impl WeaviateClient {
         Misc::new(&self.conn)
     }
 
+    pub fn schema(&self) -> Schema {
+        Schema::new(&self.conn)
+    }
+
     // TODO
-    // schema: Schema,
     // data: Data,
     // classifications: Classifications,
     // batch: Batch,
@@ -75,8 +78,6 @@ impl WeaviateClient {
 
 #[cfg(test)]
 mod tests {
-    use reqwest::Client;
-
     use super::*;
     use std::collections::HashMap;
 

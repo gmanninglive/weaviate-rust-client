@@ -5,6 +5,9 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// Can be returned in a `Result` from an API handler function..
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("usage error: `{0}`")]
+    Usage(&'static str),
+
     #[error("an error occurred")]
     Anyhow(#[from] anyhow::Error),
 

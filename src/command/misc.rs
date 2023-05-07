@@ -59,10 +59,6 @@ impl<'a> Command<MetaResponse> for MetaGetter<'a> {
             .await?;
         Ok(res)
     }
-
-    fn validate() {
-        unimplemented!()
-    }
 }
 
 #[derive(derive_new::new)]
@@ -79,10 +75,6 @@ impl<'a> Command<bool> for LiveChecker<'a> {
 
         Ok(StatusCode::le(&well_known, &StatusCode::BAD_REQUEST) && !version.is_empty())
     }
-
-    fn validate() {
-        unimplemented!()
-    }
 }
 
 #[derive(derive_new::new)]
@@ -98,10 +90,6 @@ impl<'a> Command<bool> for ReadyChecker<'a> {
         let version = self.conn.db_version().get().await?;
 
         Ok(StatusCode::le(&well_known.status(), &StatusCode::BAD_REQUEST) && !version.is_empty())
-    }
-
-    fn validate() {
-        unimplemented!()
     }
 }
 
@@ -123,10 +111,6 @@ impl<'a> Command<OpenIdConfiguration> for OpenidConfigurationGetter<'a> {
             .await?
             .json::<OpenIdConfiguration>()
             .await?)
-    }
-
-    fn validate() {
-        unimplemented!()
     }
 }
 

@@ -24,33 +24,16 @@ struct Properties {
     group_by_string: Option<String>,
 }
 
+#[derive(derive_new::new)]
 pub struct GraphQLGetter<'a> {
+    #[new(default)]
     props: Properties,
     conn: &'a Connection,
-    errors: Vec<String>,
-}
-
-impl<'a> GraphQLGetter<'a> {
-    pub fn new(conn: &'a Connection) -> Self {
-        Self {
-            props: Properties::default(),
-            conn,
-            errors: Vec::new(),
-        }
-    }
-
-    fn add_error(&mut self, error: String) {
-        self.errors.push(error);
-    }
 }
 
 #[async_trait::async_trait]
 impl Command<String> for GraphQLGetter<'_> {
     async fn r#do(&self) -> Result<String> {
         todo!();
-    }
-
-    fn validate() {
-        unimplemented!("validate not implemented for Graphql Getter")
     }
 }
