@@ -1,4 +1,4 @@
-use crate::{command::Command, http::HttpClient, Connection};
+use crate::{command::Command, Connection};
 
 #[derive(Default)]
 struct Properties {
@@ -23,17 +23,17 @@ struct Properties {
     group_by_string: Option<String>,
 }
 
-pub struct GraphQLGetter {
+pub struct GraphQLGetter<'a> {
     props: Properties,
-    client: HttpClient,
+    conn: &'a Connection,
     errors: Vec<String>,
 }
 
-impl GraphQLGetter {
-    pub fn new(conn: Connection) -> Self {
+impl<'a> GraphQLGetter<'a> {
+    pub fn new(conn: &'a Connection) -> Self {
         Self {
             props: Properties::default(),
-            client: conn.client,
+            conn,
             errors: Vec::new(),
         }
     }
@@ -44,7 +44,7 @@ impl GraphQLGetter {
 }
 
 #[async_trait::async_trait]
-impl Command<String> for GraphQLGetter {
+impl Command<String> for GraphQLGetter<'_> {
     async fn r#do(&self) -> Result<String, anyhow::Error> {
         todo!();
     }

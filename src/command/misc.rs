@@ -4,15 +4,35 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub struct Misc {
-    pub get_meta: MetaGetter,
-    pub check_live: LiveChecker,
-    pub get_openid_configuration: OpenidConfigurationGetter,
+/// ## Misc Commands
+pub struct Misc<'a> {
+    conn: &'a Connection,
+}
+
+impl<'a> Misc<'a> {
+    pub fn new(conn: &'a Connection) -> Self {
+        Self { conn }
+    }
+
+    pub fn get_meta(self) -> MetaGetter {
+        MetaGetter::new(self.conn)
+    }
+
+    pub fn check_live(self) -> LiveChecker {
+        LiveChecker::new(self.conn)
+    }
+
+    pub fn check_ready(self) -> ReadyChecker {
+        ReadyChecker::new(self.conn)
+    }
+
+    pub fn get_openid_configuration(self) -> OpenidConfigurationGetter {
+        OpenidConfigurationGetter::new(self.conn)
+    }
 }
 
 #[derive(Clone)]
 pub struct MetaGetter {
-    /// The client's connection
     client: HttpClient,
 }
 
@@ -50,16 +70,15 @@ impl Command<MetaResponse> for MetaGetter {
 }
 
 pub struct LiveChecker {
-    /// The client's connection
     client: HttpClient,
     db_version_provider: DbVersionProvider,
 }
 
 impl LiveChecker {
-    pub fn new(conn: &Connection, db_version_provider: DbVersionProvider) -> Self {
+    pub fn new(conn: &Connection) -> Self {
         Self {
             client: conn.client.clone(),
-            db_version_provider,
+            db_version_provider: DbVersionProvider::new(conn),
         }
     }
 }
@@ -72,6 +91,35 @@ impl Command<bool> for LiveChecker {
         let version = self.db_version_provider.clone().get().await?;
 
         Ok(StatusCode::le(&well_known, &StatusCode::BAD_REQUEST) && !version.is_empty())
+    }
+
+    fn validate() {
+        unimplemented!()
+    }
+}
+
+pub struct ReadyChecker {
+    client: HttpClient,
+    db_version_provider: DbVersionProvider,
+}
+
+impl ReadyChecker {
+    pub fn new(conn: &Connection) -> Self {
+        Self {
+            client: conn.client.clone(),
+            db_version_provider: DbVersionProvider::new(conn),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl Command<bool> for ReadyChecker {
+    async fn r#do(&self) -> Result<bool, anyhow::Error> {
+        let well_known = self.client.get("/.well-known/ready").await?;
+
+        let version = self.db_version_provider.clone().get().await?;
+
+        Ok(StatusCode::le(&well_known.status(), &StatusCode::BAD_REQUEST) && !version.is_empty())
     }
 
     fn validate() {

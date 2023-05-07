@@ -4,14 +4,16 @@ pub use self::getter::GraphQLGetter;
 
 mod getter;
 
-pub struct GraphQL {
-    pub getter: GraphQLGetter,
+pub struct GraphQL<'a> {
+    conn: &'a Connection,
 }
 
-impl GraphQL {
-    pub fn new(conn: Connection) -> Self {
-        Self {
-            getter: GraphQLGetter::new(conn),
-        }
+impl<'a> GraphQL<'a> {
+    pub fn new(conn: &'a Connection) -> Self {
+        Self { conn }
+    }
+
+    pub fn getter(self) -> GraphQLGetter<'a> {
+        GraphQLGetter::new(self.conn)
     }
 }

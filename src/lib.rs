@@ -3,7 +3,6 @@ pub mod connection;
 mod graphql;
 pub mod utils;
 
-use command::misc::{LiveChecker, OpenidConfigurationGetter};
 pub use command::{
     misc::{MetaGetter, Misc},
     Command,
@@ -11,7 +10,6 @@ pub use command::{
 pub use connection::*;
 
 use graphql::GraphQL;
-use utils::db_version::DbVersionProvider;
 
 pub struct WeaviateClient {
     conn: Connection,
@@ -63,18 +61,12 @@ impl WeaviateClientBuilder {
 }
 
 impl WeaviateClient {
-    pub fn graphql(self) -> GraphQL {
-        GraphQL::new(self.conn)
+    pub fn graphql(&self) -> GraphQL {
+        GraphQL::new(&self.conn)
     }
 
-    pub fn misc(self) -> Misc {
-        let db_version_provider = DbVersionProvider::new(&self.conn);
-
-        Misc {
-            get_meta: MetaGetter::new(&self.conn),
-            check_live: LiveChecker::new(&self.conn, db_version_provider),
-            get_openid_configuration: OpenidConfigurationGetter::new(&self.conn),
-        }
+    pub fn misc(&self) -> Misc {
+        Misc::new(&self.conn)
     }
 }
 
@@ -100,7 +92,7 @@ mod tests {
         let client = WeaviateClientBuilder::new("http", server.host_with_port()).build();
         let misc = client.misc();
         let meta = misc
-            .get_meta
+            .get_meta()
             .r#do()
             .await
             .expect("error fetching meta data");
@@ -127,7 +119,7 @@ mod tests {
         let client = WeaviateClientBuilder::new("http", server.host_with_port()).build();
         let misc = client.misc();
         let is_live = misc
-            .check_live
+            .check_live()
             .r#do()
             .await
             .expect("error checking is live");
