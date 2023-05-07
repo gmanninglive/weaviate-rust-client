@@ -25,9 +25,6 @@ pub enum AuthParams {
 ///
 /// # Weaviate ConnectionBuilder
 ///
-/// ## Limitations
-/// Oidc Auth is not fully implemented
-///
 /// ## Examples
 /// ```
 /// use weaviate_client::{ConnectionBuilder, Connection};

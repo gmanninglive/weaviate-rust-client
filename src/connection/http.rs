@@ -273,7 +273,7 @@ mod tests {
     use graphql_client::QueryBody;
 
     use super::*;
-    use crate::{command::meta::MetaResponse, connection::Connection};
+    use crate::{command::misc::MetaResponse, connection::Connection};
     use std::collections::HashMap;
 
     #[tokio::test]

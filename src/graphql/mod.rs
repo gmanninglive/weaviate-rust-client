@@ -1,11 +1,11 @@
 use crate::Connection;
 
-use self::getter::GraphQLGetter;
+pub use self::getter::GraphQLGetter;
 
 mod getter;
 
 pub struct GraphQL {
-    getter: GraphQLGetter,
+    pub getter: GraphQLGetter,
 }
 
 impl GraphQL {

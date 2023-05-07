@@ -1,4 +1,4 @@
-pub mod meta;
+pub mod misc;
 
 #[async_trait::async_trait]
 pub trait Command<T> {

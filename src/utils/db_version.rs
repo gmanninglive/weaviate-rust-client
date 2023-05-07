@@ -1,5 +1,5 @@
 use crate::{
-    command::{meta::MetaGetter, Command},
+    command::{misc::MetaGetter, Command},
     connection::Connection,
 };
 
@@ -56,7 +56,8 @@ impl DbVersionSupport {
     }
 }
 
-struct DbVersionProvider {
+#[derive(Clone)]
+pub struct DbVersionProvider {
     version: Option<String>,
     empty_version: String,
     version_getter: MetaGetter,
@@ -70,7 +71,7 @@ impl VersionProvider for DbVersionProvider {
 }
 
 impl DbVersionProvider {
-    fn new(conn: Connection) -> Self {
+    pub fn new(conn: &Connection) -> Self {
         Self {
             version: None,
             empty_version: "".to_owned(),
@@ -78,20 +79,13 @@ impl DbVersionProvider {
         }
     }
 
-    async fn refresh(self, force: bool) -> String {
+    pub async fn get(mut self) -> Result<String, anyhow::Error> {
         match self.version {
-            Some(version) => {
-                if force {
-                    let meta = self.version_getter.r#do().await;
-                    match meta {
-                        Ok(meta) => meta.version,
-                        Err(_) => self.empty_version,
-                    }
-                } else {
-                    version
-                }
+            Some(version) => Ok(version),
+            None => {
+                let version = self.version_getter.r#do().await?.version;
+                Ok(self.version.insert(version).to_owned())
             }
-            None => self.empty_version,
         }
     }
 }
