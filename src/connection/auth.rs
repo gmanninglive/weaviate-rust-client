@@ -1,5 +1,3 @@
-pub type ApiKey = Option<String>;
-
 #[derive(Clone, Default)]
 pub enum Auth {
     #[default]

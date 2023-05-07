@@ -1,6 +1,5 @@
 pub mod command;
 pub mod connection;
-mod graphql;
 pub mod utils;
 
 pub use command::{
@@ -9,18 +8,10 @@ pub use command::{
 };
 pub use connection::*;
 
-use graphql::GraphQL;
+use command::graphql::GraphQL;
 
 pub struct WeaviateClient {
     conn: Connection,
-    // schema: Schema,
-    // data: Data,
-    // classifications: Classifications,
-    // batch: Batch,
-    // misc: Misc,
-    // c11y: C11y,
-    // backup: Backup,
-    // cluster: Cluster,
 }
 
 #[derive(Default)]
@@ -68,6 +59,15 @@ impl WeaviateClient {
     pub fn misc(&self) -> Misc {
         Misc::new(&self.conn)
     }
+
+    // TODO
+    // schema: Schema,
+    // data: Data,
+    // classifications: Classifications,
+    // batch: Batch,
+    // c11y: C11y,
+    // backup: Backup,
+    // cluster: Cluster,
 }
 
 #[cfg(test)]
@@ -98,33 +98,5 @@ mod tests {
             .expect("error fetching meta data");
 
         assert_eq!(meta, response);
-    }
-
-    #[tokio::test]
-    async fn live_checker_works() {
-        let mut server = mockito::Server::new();
-        let response = command::misc::MetaResponse {
-            hostname: "http://[::]:8080".to_string(),
-            modules: HashMap::new(),
-            version: "1.19.0".to_string(),
-        };
-
-        server
-            .mock("GET", "/v1/meta")
-            .with_body(serde_json::to_string(&response).expect("error serializing mock response"))
-            .create();
-
-        let well_known_mock = server.mock("GET", "/v1/.well-known/live").create();
-
-        let client = WeaviateClientBuilder::new("http", server.host_with_port()).build();
-        let misc = client.misc();
-        let is_live = misc
-            .check_live()
-            .r#do()
-            .await
-            .expect("error checking is live");
-
-        well_known_mock.assert();
-        assert!(is_live);
     }
 }

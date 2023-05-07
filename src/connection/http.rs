@@ -15,8 +15,6 @@ pub struct HttpParams {
 pub struct HttpClient {
     client: reqwest::Client,
     base_uri: String,
-    host: String,
-    scheme: String,
     headers: Option<Headers>,
     auth: Auth,
 }
@@ -26,8 +24,6 @@ impl HttpClient {
         Self {
             base_uri: format!("{}://{}/v1", params.scheme, params.host),
             client: reqwest::Client::new(),
-            scheme: params.scheme,
-            host: params.host,
             auth: params.auth,
             headers: params.headers,
         }

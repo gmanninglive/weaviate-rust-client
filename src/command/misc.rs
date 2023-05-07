@@ -162,10 +162,13 @@ impl Command<OpenIdConfiguration> for OpenidConfigurationGetter {
 #[allow(unused_imports)]
 mod tests {
     use super::*;
-    use crate::connection::{http::HttpParams, Auth, AuthParams, Connection, ConnectionBuilder};
+    use crate::{
+        command,
+        connection::{http::HttpParams, Auth, AuthParams, Connection, ConnectionBuilder},
+    };
 
     #[tokio::test]
-    async fn test_meta_getter_do() {
+    async fn meta_getter_works() {
         let mut server = mockito::Server::new();
         let response = MetaResponse {
             hostname: "http://[::]:8080".to_string(),
@@ -178,14 +181,44 @@ mod tests {
             .with_body(serde_json::to_string(&response).expect("error serializing mock response"))
             .create();
 
-        let conn = ConnectionBuilder::new("http", server.host_with_port()).build();
+        let connection = ConnectionBuilder::new("http", server.host_with_port()).build();
 
-        let meta = MetaGetter::new(&conn)
+        let misc = Misc::new(&connection);
+        let meta = misc
+            .get_meta()
             .r#do()
             .await
             .expect("error fetching meta data");
 
         mock.assert();
         assert_eq!(response, meta);
+    }
+
+    #[tokio::test]
+    async fn live_checker_works() {
+        let mut server = mockito::Server::new();
+        let response = MetaResponse {
+            hostname: "http://[::]:8080".to_string(),
+            modules: HashMap::new(),
+            version: "1.19.0".to_string(),
+        };
+
+        server
+            .mock("GET", "/v1/meta")
+            .with_body(serde_json::to_string(&response).expect("error serializing mock response"))
+            .create();
+
+        let well_known_mock = server.mock("GET", "/v1/.well-known/live").create();
+
+        let connection = ConnectionBuilder::new("http", server.host_with_port()).build();
+        let misc = Misc::new(&connection);
+        let is_live = misc
+            .check_live()
+            .r#do()
+            .await
+            .expect("error checking is live");
+
+        well_known_mock.assert();
+        assert!(is_live);
     }
 }

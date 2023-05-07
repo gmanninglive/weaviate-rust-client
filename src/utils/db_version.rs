@@ -59,7 +59,6 @@ impl DbVersionSupport {
 #[derive(Clone)]
 pub struct DbVersionProvider {
     version: Option<String>,
-    empty_version: String,
     version_getter: MetaGetter,
 }
 
@@ -74,7 +73,6 @@ impl DbVersionProvider {
     pub fn new(conn: &Connection) -> Self {
         Self {
             version: None,
-            empty_version: "".to_owned(),
             version_getter: MetaGetter::new(conn),
         }
     }
